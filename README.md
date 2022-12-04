@@ -40,8 +40,6 @@ Our plan for fine-tuning the Whisper model is as follows:
 #### Week 3 (19th December 2022)
 - Monitor and adjust the model as needed to optimize its performance on these languages
 
-We are confident that with careful planning and diligent work, we can fine-tune the Whisper model to build a performant 
-
 ## How to Contribute
 If you are interested in contributing to this project, there are several ways you can help:
 
