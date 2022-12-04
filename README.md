@@ -48,6 +48,3 @@ If you are interested in contributing to this project, there are several ways yo
 - Join the community of users and developers to discuss and collaborate on the project.
 
 To get started, fork this repository and submit a pull request with your proposed changes. We look forward to working with you to improve the accuracy of speech recognition in the Swahili and Yoruba languages!
-
-## Conclusion
-This project represents an important step in the development of the Whisper model, and we are excited to see how it performs on various NLP tasks once pretraining is complete. Thank you for your interest in this project!
