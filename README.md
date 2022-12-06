@@ -22,7 +22,7 @@ If you are interested in contributing to this project, there are several ways yo
 - Offer additional data for fine-tuning the Whisper model.
 - Join the community of users and developers to discuss and collaborate on the project.
 
-### Branching Strategy
+## Branching Strategy
 
 Only well-tested and reviewed code is merged into the master branch. This helps to avoid merge conflicts and ensures the quality of the codebase.
 
