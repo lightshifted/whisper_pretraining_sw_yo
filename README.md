@@ -14,6 +14,40 @@ Additionally, we will create a community of users and developers who can contrib
 
 Pretrained model weights are stored in HuggingFace repository [here](https://huggingface.co/hedronstone/whisper_event_swahili_small). At the moment, only authorized users have access.
 
+## Recommended Training Configurations
+Here, we will provide some guidance for appropriate training and evaluation batch sizes depending on your GPU device. The Whisper model expects log-Mel input features of a fixed dimension, so GPU memory requirements are independent of any sample's audio length. Thus these recommendations should stand for all 16/40GB GPU devices.
+
+#### V100 / 16 GB GPU
+
+| Model  | Train Batch Size | Gradient Acc Steps | Eval Batch size |
+|--------|------------------|--------------------|-----------------|
+| small  | 16               | 2                  | 8               |
+| medium | 2                | 16                 | 1               |
+
+It is advised to run the "small" checkpoint if training on a V100 device. Running the medium checkpoint will take upwards of 12 hours for 5k training steps. 
+#### A100 / 40GB GPU
+
+| Model  | Train Batch Size | Gradient Acc Steps | Eval Batch size |
+|--------|------------------|--------------------|-----------------|
+| small  | 64               | 1                  | 32              |
+| medium | 32               | 1                  | 16              |
+
+### Punctuation, Casing and Normalisation
+
+When using the Python training script, removing casing for the training data is enabled by passing the flag `--do_lower_case`. Removing punctuation in the training data is achieved by passing the flag `--do_remove_punctuation`. Both of these flags default to False, and we **do not** recommend setting either of them to True. This will ensure your fine-tuned model learns to predict casing and punctuation. Normalisation is only applied during evaluation by setting the flag `--do_normalize_eval` (which defaults to True and recommend setting). 
+
+Normalisation is performed according to the 'official' Whisper normaliser. This normaliser applies the following basic standardisation for non-English text:
+1. Remove any phrases between matching brackets ([, ]).
+2. Remove any phrases between matching parentheses ((, )).
+3. Replace any markers, symbols, and punctuation characters with a space, i.e. when the Unicode category of each character in the NFKC-normalized string starts with M, S, or P.
+4. Make the text lowercase.
+5. Replace any successive whitespace characters with a space.
+
+Similarly, in the notebooks, removing casing in the training data is enabled by setting the variable `do_lower_case = True`, 
+and punctuation by `do_remove_punctuation = True`. We do not recommend setting either of these to True to ensure that 
+your model learns to predict casing and punctuation. Thus, they are set to False by default. Normalisation is only 
+applied during evaluation by setting the variable `do_normalize_eval=True` (which we do recommend setting). 
+
 ## How to Contribute
 
 If you are interested in contributing to this project, there are several ways you can help:
@@ -37,3 +71,57 @@ Only well-tested and reviewed code is merged into the master branch. This helps 
 7. Repeat the process for each new feature or bug fix.
 
 To get started, fork this repository and submit a pull request with your proposed changes. We look forward to working with you to improve the accuracy of speech recognition in the Swahili and Yoruba languages.
+
+## Tips and Tricks
+
+
+### Adam 8bit
+The [Adam optimiser](https://arxiv.org/abs/1412.6980a) requires two params (betas) for every model parameter. So the memory requirement of the optimiser is **two times** that of the model. You can switch to using an 8bit version of the Adam optimiser from [`bitsandbytes`](https://github.com/TimDettmers/bitsandbytes#bitsandbytes). This will cast the optimiser parameters into 8bit precision, saving you a lot of memory and potentially allowing you to run bigger batch sizes.
+
+To use Adam 8bti, you first need to pip install `bitsandbytes`:
+
+```bash
+pip install bitsandbytes
+```
+
+Then, set `optim="adamw_bnb_8bit"`, either in your `run.sh` file if running from a Python script, or when you instantiate the Seq2SeqTrainingArguments from a Jupyter Notebook or Google Colab:
+
+```python
+from transformers import Seq2SeqTrainingArguments
+
+training_args = Seq2SeqTrainingArguments(
+    output_dir="./",
+    per_device_train_batch_size=64,
+    gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
+    learning_rate=1e-5,
+    warmup_steps=500,
+    max_steps=5000,
+    gradient_checkpointing=True,
+    fp16=True,
+    evaluation_strategy="steps",
+    per_device_eval_batch_size=8,
+    predict_with_generate=True,
+    generation_max_length=225,
+    save_steps=1000,
+    eval_steps=1000,
+    logging_steps=25,
+    report_to=["tensorboard"],
+    load_best_model_at_end=True,
+    metric_for_best_model="wer",
+    greater_is_better=False,
+    push_to_hub=True,
+    optim="adamw_bnb_8bit"
+)
+```
+
+### Adafactor
+
+Rather than using Adam, you can use a different optimiser all together. Adam requires two optimiser params per one model param, but [Adafactor](https://arxiv.org/abs/1804.04235) uses only one. To enable Adafactor, set `optim="adafactor"` in the `Seq2SeqTrainingArguments`. You can expect to double your training batch size when using Adafactor compared to Adam. 
+
+A word of caution: Adafactor is untested for fine-tuning Whisper, so we are unsure sure how 
+Adafactor performance compares to Adam! For this reason, we recommend Adafactor as an **experimental feature** only.
+
+## Scripts & Colabs
+
+1. [Whirlwind tour of Whispering with 🤗Transformers](https://colab.research.google.com/drive/1l290cRv4RdvuLNlSeo9WexByHaNWs3s3?usp=sharing)
+2. [8bit inference for Whisper large model (6.5 gig VRAM) 🤯](https://colab.research.google.com/drive/1EMOwwfm1V1fHxH7eT1LLg7yBjhTooB6j?usp=sharing)
