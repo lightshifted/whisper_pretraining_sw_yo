@@ -231,5 +231,6 @@ Adafactor performance compares to Adam! For this reason, we recommend Adafactor 
 
 ## Scripts & Example Notebooks
 
-1. [Whirlwind tour of Whispering with 🤗Transformers](https://colab.research.google.com/drive/1l290cRv4RdvuLNlSeo9WexByHaNWs3s3?usp=sharing)
+1. [Processing Local Datasets Example Notebook](https://github.com/masslightsquared/whisper_pretraining_sw_yo/blob/jilp/example_custom_dataset_preprocessing.ipynb)
 2. [8bit inference for Whisper large model (6.5 gig VRAM) 🤯](https://colab.research.google.com/drive/1EMOwwfm1V1fHxH7eT1LLg7yBjhTooB6j?usp=sharing)
+3. [Fine-Tune Whisper Example Notebook](https://github.com/masslightsquared/whisper_pretraining_sw_yo/blob/jilp/example_whisper_training_run.ipynb)
